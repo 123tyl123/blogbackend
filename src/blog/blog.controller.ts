@@ -126,7 +126,7 @@ export class BlogController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Post('unlike/:blogId')
+  @Delete('like/:blogId')
   async unlike(
     @Request() req: AuthenticatedRequest,
     @Param('blogId') blogId: string,

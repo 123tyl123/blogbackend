@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -202,6 +203,89 @@ export class UserService {
         accessToken,
         refreshToken: newRefreshToken,
         expiresIn: 900,
+      },
+    };
+  }
+
+  async getInfo(userId: string): Promise<{
+    code: number;
+    message: string;
+    data?: { id: string; username: string; avatar: string | null };
+  }> {
+    const user = await this.prisma.users.findUnique({ where: { id: userId } });
+    if (!user) {
+      return { code: 401, message: '未登录' };
+    }
+
+    return {
+      code: 200,
+      message: 'success',
+      data: {
+        id: user.id,
+        username: user.username,
+        avatar: user.avatar,
+      },
+    };
+  }
+
+  async updateAvatar(
+    userId: string,
+    avatarUrl: string,
+  ): Promise<{
+    code: number;
+    message: string;
+    data?: { id: string; username: string; avatar: string | null };
+  }> {
+    const user = await this.prisma.users.findUnique({ where: { id: userId } });
+    if (!user) {
+      return { code: 404, message: '用户不存在' };
+    }
+
+    const updated = await this.prisma.users.update({
+      where: { id: userId },
+      data: { avatar: avatarUrl },
+    });
+
+    return {
+      code: 200,
+      message: '上传成功',
+      data: {
+        id: updated.id,
+        username: updated.username,
+        avatar: updated.avatar,
+      },
+    };
+  }
+
+  async update(
+    userId: string,
+    dto: UpdateUserDto,
+  ): Promise<{
+    code: number;
+    message: string;
+    data?: { id: string; username: string; avatar: string | null };
+  }> {
+    const user = await this.prisma.users.findUnique({ where: { id: userId } });
+    if (!user) {
+      return { code: 404, message: '用户不存在' };
+    }
+
+    const updated = await this.prisma.users.update({
+      where: { id: userId },
+      data: {
+        username: dto.username ?? user.username,
+        avatar: dto.avatar ?? user.avatar,
+        email: dto.email ?? user.email,
+      },
+    });
+
+    return {
+      code: 200,
+      message: '更新成功',
+      data: {
+        id: updated.id,
+        username: updated.username,
+        avatar: updated.avatar,
       },
     };
   }
